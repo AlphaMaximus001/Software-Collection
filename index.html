@@ -19,30 +19,51 @@
   }
   a{color:inherit;text-decoration:none}
 
-  .brand{position:fixed;top:36px;left:40px;width:46px;height:auto;opacity:.94}
+  .brand{position:fixed;top:36px;left:40px;width:46px;height:auto;opacity:.94;z-index:2}
 
-  main{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 24px}
+  main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:44px;padding:140px 24px 80px;max-width:1180px;margin:0 auto}
 
-  .profiles{display:flex;gap:56px;flex-wrap:wrap;justify-content:center}
-  .profile{display:flex;flex-direction:column;align-items:center;gap:18px;cursor:pointer}
+  /* ---- search ---- */
+  .search{position:relative;width:100%;max-width:420px}
+  .search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;
+    stroke:var(--ink2);fill:none;stroke-width:1.8;pointer-events:none}
+  #q{
+    width:100%;padding:13px 16px 13px 46px;border-radius:999px;
+    background:var(--bg2);border:1px solid #333;color:var(--ink);
+    font:inherit;font-size:15px;outline:none;transition:border-color .15s ease,background .15s ease;
+  }
+  #q::placeholder{color:var(--ink2)}
+  #q:focus{border-color:#666;background:#252525}
 
-  .avatar{width:150px;height:150px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  /* ---- grid ---- */
+  .profiles{display:flex;flex-wrap:wrap;justify-content:center;gap:40px 28px;width:100%}
+  .profile{display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;
+    width:152px;max-width:100%}
+
+  .avatar{width:112px;height:112px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     border:3px solid transparent;transition:border-color .15s ease,transform .15s ease}
-  .avatar svg{width:64px;height:64px}
-  .a-directory{background:var(--seal)}
-  .a-pricing{background:var(--canal)}
+  .avatar svg{width:48px;height:48px}
+  .avatar .mono{font-size:34px;font-weight:600;color:#fff;letter-spacing:.5px}
 
-  .profile:hover .avatar,.profile:focus-visible .avatar{border-color:#fff;transform:scale(1.04)}
+  .profile:hover .avatar,.profile:focus-visible .avatar{border-color:#fff;transform:scale(1.05)}
   .profile:focus-visible{outline:none}
 
-  .name{font-size:17px;color:var(--ink2);transition:color .15s ease}
+  .name{font-size:15px;line-height:1.35;color:var(--ink2);text-align:center;transition:color .15s ease}
   .profile:hover .name,.profile:focus-visible .name{color:#fff}
+
+  .empty{color:var(--ink2);font-size:15px;padding:40px 0}
+  [hidden]{display:none !important}
 
   @media (max-width:520px){
     .brand{top:24px;left:24px;width:38px}
-    .profiles{gap:34px}
-    .avatar{width:112px;height:112px}
-    .avatar svg{width:48px;height:48px}
+    main{padding:110px 20px 60px;gap:32px}
+    .profiles{gap:30px 18px}
+    .profile{width:118px}
+    .avatar{width:96px;height:96px}
+    .avatar svg{width:42px;height:42px}
+    .avatar .mono{font-size:28px}
+    .name{font-size:14px}
   }
 </style>
 </head>
@@ -50,29 +71,119 @@
   <img class="brand" src="assets/maaef-mark-white.png" alt="Maaef">
 
   <main>
-    <div class="profiles">
-      <a class="profile" href="https://maaef-dashboard-roan.vercel.app/" target="_blank" rel="noopener">
-        <span class="avatar a-directory">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="10" y="3" width="4" height="4" rx="1"></rect>
-            <rect x="3" y="17" width="4" height="4" rx="1"></rect>
-            <rect x="17" y="17" width="4" height="4" rx="1"></rect>
-            <path d="M12 7v4M12 11H5v6M12 11h7v6"></path>
-          </svg>
-        </span>
-        <span class="name">Posting Directory</span>
-      </a>
-
-      <a class="profile" href="https://maaef-pricelisttool.onrender.com/" target="_blank" rel="noopener">
-        <span class="avatar a-pricing">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.5 12.5 12.8 20.2a1.5 1.5 0 0 1-2.12 0l-6.88-6.88a1.5 1.5 0 0 1 0-2.12L11.5 3.5H19a1.5 1.5 0 0 1 1.5 1.5v7.5Z"></path>
-            <circle cx="15.5" cy="8.5" r="1.5" fill="#fff" stroke="none"></circle>
-          </svg>
-        </span>
-        <span class="name">Price List Tool</span>
-      </a>
+    <div class="search">
+      <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input id="q" type="search" placeholder="Search software…" autocomplete="off" aria-label="Search software">
     </div>
+
+    <div class="profiles" id="grid"></div>
+    <p class="empty" id="empty" hidden>No software matches that search.</p>
   </main>
+
+<script>
+/* ------------------------------------------------------------------
+   ADD A NEW SOURCE HERE — one line per app.
+     name : label shown under the tile
+     url  : where the tile links to
+     icon : optional key from ICONS below; omit to show initials
+     color: optional CSS color; omit to auto-assign from PALETTE
+------------------------------------------------------------------- */
+const SOURCES = [
+  { name: "Maaef Price List tool",      url: "https://maaef-pricelisttool.onrender.com/",     icon: "tag",     color: "var(--canal)" },
+  { name: "Maaef Tea Stall Website",    url: "https://maaef-chai-website-rge6.vercel.app/",   icon: "cup",     color: "#b5762a"      },
+  { name: "Maaef Irrigation Directory", url: "https://maaef-dashboard-roan.vercel.app/login", icon: "droplet", color: "#3d5a8c"      },
+  { name: "Maaef Cyberascii",           url: "https://cyberascii-kappa.vercel.app/",          icon: "code",    color: "#6b4c9a"      },
+  { name: "Maaef Studio Vendor List",   url: "https://maaef-studios-dashboard-xi.vercel.app/", icon: "users",  color: "#2f6d4f"      },
+];
+
+const PALETTE = ["#b0263a","#2a8c82","#3d5a8c","#b5762a","#6b4c9a","#2f6d4f","#a03c6e","#4a6572"];
+
+const ICONS = {
+  sitemap:  '<rect x="10" y="3" width="4" height="4" rx="1"></rect><rect x="3" y="17" width="4" height="4" rx="1"></rect><rect x="17" y="17" width="4" height="4" rx="1"></rect><path d="M12 7v4M12 11H5v6M12 11h7v6"></path>',
+  tag:      '<path d="M20.5 12.5 12.8 20.2a1.5 1.5 0 0 1-2.12 0l-6.88-6.88a1.5 1.5 0 0 1 0-2.12L11.5 3.5H19a1.5 1.5 0 0 1 1.5 1.5v7.5Z"></path><circle cx="15.5" cy="8.5" r="1.5" fill="#fff" stroke="none"></circle>',
+  chart:    '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>',
+  doc:      '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path><path d="M14 3v5h5M9 13h6M9 17h6"></path>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path>',
+  mail:     '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 7 8.5 6 8.5-6"></path>',
+  box:      '<path d="M21 8 12 3 3 8v8l9 5 9-5Z"></path><path d="m3 8 9 5 9-5M12 13v8"></path>',
+  code:     '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"></path>',
+  camera:   '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"></path><circle cx="12" cy="13" r="3.5"></circle>',
+  globe:    '<circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"></path>',
+  users:    '<circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 5.2a3.5 3.5 0 0 1 0 5.6M18.5 20a6.5 6.5 0 0 0-2.2-4.9"></path>',
+  gear:     '<circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"></path>',
+  cup:      '<path d="M4 8h12v5.5A4.5 4.5 0 0 1 11.5 18h-3A4.5 4.5 0 0 1 4 13.5Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path><path d="M3 21h14"></path><path d="M8.5 2.5v2.2M12 2.5v2.2"></path>',
+  droplet:  '<path d="M12 3.2c0 0 6 6.1 6 9.8a6 6 0 0 1-12 0c0-3.7 6-9.8 6-9.8Z"></path><path d="M9.2 13.6a2.8 2.8 0 0 0 2.8 2.8"></path>',
+};
+
+const grid  = document.getElementById("grid");
+const empty = document.getElementById("empty");
+const q     = document.getElementById("q");
+
+function initials(name){
+  return name.trim().split(/\s+/).slice(0,2).map(w => w[0]).join("").toUpperCase();
+}
+
+function tile(src, i){
+  const a = document.createElement("a");
+  a.className = "profile";
+  a.href = src.url;
+  a.target = "_blank";
+  a.rel = "noopener";
+
+  const av = document.createElement("span");
+  av.className = "avatar";
+  av.style.background = src.color || PALETTE[i % PALETTE.length];
+
+  const glyph = ICONS[src.icon];
+  if (glyph){
+    av.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" ' +
+                   'stroke-linecap="round" stroke-linejoin="round">' + glyph + '</svg>';
+  } else {
+    const m = document.createElement("span");
+    m.className = "mono";
+    m.textContent = initials(src.name);
+    av.appendChild(m);
+  }
+
+  const n = document.createElement("span");
+  n.className = "name";
+  n.textContent = src.name;
+
+  a.append(av, n);
+  return a;
+}
+
+const tiles = SOURCES.map((s, i) => {
+  const el = tile(s, i);
+  grid.appendChild(el);
+  return { el, key: s.name.toLowerCase() };
+});
+
+function filter(){
+  const term = q.value.trim().toLowerCase();
+  let shown = 0;
+  for (const t of tiles){
+    const hit = !term || t.key.includes(term);
+    t.el.hidden = !hit;
+    if (hit) shown++;
+  }
+  empty.hidden = shown > 0;
+}
+
+q.addEventListener("input", filter);
+
+// "/" focuses search; Enter opens the only/first visible match.
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== q){ e.preventDefault(); q.focus(); }
+});
+q.addEventListener("keydown", e => {
+  if (e.key === "Enter"){
+    const first = tiles.find(t => !t.el.hidden);
+    if (first) first.el.click();
+  } else if (e.key === "Escape"){
+    q.value = ""; filter();
+  }
+});
+</script>
 </body>
 </html>
